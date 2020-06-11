@@ -73,14 +73,44 @@ module.exports = () => {
                     });
                     return;
                 }
-                const updatedReview = db.Review.findByPk(review.id);
+                const updatedReview = await db.Review.findByPk(review.id);
                 res.status(200).json({
                     review: updatedReview,
-                    message: "review updated successfullt"
+                    message: "review updated successfully"
                 });
             } catch (err) {
                 next(err);
             };
+        })
+        .delete(async (req, res, next) => {
+            try {
+                const review = await db.Review.findByPk(req.params.id);
+
+                if (!review) {
+                    res.status(404).json({
+                        message: "review not found"
+                    });
+                    return;
+                }
+
+                const deleted = await db.Review.destroy({
+                    where: {
+                        id: review.id
+                    }
+                });
+
+                if (!deleted) {
+                    res.status(400).json({
+                        message: "review deletion failed"
+                    });
+                    return
+                }
+                res.status(200).json({
+                    message: "review deletion successfull"
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
     return router;
