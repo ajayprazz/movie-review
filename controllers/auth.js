@@ -37,102 +37,117 @@ function map_user_request(userDetail) {
 module.exports = function () {
 
     router.route("/register")
-        .post((req, res, next) => {
+        .post(async (req, res, next) => {
             const mappedUser = map_user_request(req.body);
-            db.User.create(mappedUser)
-                .then(user => {
-                    res.status(400).json({
-                        user: user
-                    });
-                }).catch(err => {
-                    return next(err);
-                })
+            try {
+                const user = await db.User.create(mappedUser);
+                res.status(400).json({
+                    user: user
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
     router.route("/login")
-        .post((req, res, next) => {
-            db.User.findOne({
+        .post(async (req, res, next) => {
+            try {
+                const user = await db.User.findOne({
                     where: {
                         username: req.body.username
                     }
-                })
-                .then(user => {
-                    console.log(user);
-                    if (user) {
-                        const matched = bcrypt.compareSync(req.body.password, user.password);
-                        if (matched) {
-                            const token = jwt.sign({
-                                id: user.id,
-                                username: user.username
-                            }, config.app.jwtSecret);
-                            res.status(200).json({
-                                message: "login successfull",
-                                user: user,
-                                token: token
-                            });
-                        } else {
-                            res.status(400).json({
-                                message: "username or password wrong"
-                            });
-                        }
-                    } else {
-                        res.status(400).json({
-                            message: "username or password wrong"
-                        });
-                    }
-                })
-                .catch(err => {
-                    return next(err);
                 });
+
+                if (!user) {
+                    res.status(401).json({
+                        message: "username or password wrong"
+                    });
+                    return;
+                }
+
+                const matched = bcrypt.compareSync(req.body.password, user.password);
+
+                if (!matched) {
+                    res.status(401).json({
+                        message: "username or password wrong"
+                    });
+                }
+                const token = jwt.sign({
+                    id: user.id,
+                    username: user.username
+                }, config.app.jwtSecret);
+
+                res.status(200).json({
+                    message: "login successfull",
+                    user: user,
+                    token: token
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
 
     router.route("/user")
-        .get((req, res, next) => {
-            db.User.findAll()
-                .then(users => {
-                    res.status(200).json({
-                        users: users
-                    });
-                })
-                .catch(err => next(err));
-        })
+        .get(async (req, res, next) => {
+            try {
+                const users = await db.User.findAll();
+                res.status(200).json({
+                    users: users
+                });
+            } catch (err) {
+                next(err);
+            }
+        });
 
     router.route("/user/:id")
-        .get((req, res, next) => {
-            db.User.findByPk(req.params.id)
-                .then(user => {
-                    if (user) {
-                        res.status(200).json({
-                            user: user
-                        });
-                    } else {
-                        res.status(404).json({
-                            message: "user not found"
-                        });
-                    }
+        .get(async (req, res, next) => {
+            try {
+                const user = await db.User.findByPk(req.params.id);
 
-                })
-                .catch(err => next(err));
+                if (!user) {
+                    res.status(404).json({
+                        message: "user not found"
+                    });
+                    return;
+                }
+                res.status(200).json({
+                    user: user
+                });
+            } catch (err) {
+                next(err);
+            }
         })
-        .delete((req, res, next) => {
-            db.User.destroy({
+        .delete(async (req, res, next) => {
+            try {
+                const user = await db.User.findByPk(req.params.id);
+
+                if (!user) {
+                    res.status(404).json({
+                        message: "user not found"
+                    });
+                    return;
+                }
+
+                const deleted = await db.User.destroy({
                     where: {
                         id: req.params.id
                     }
-                })
-                .then(deleted => {
-                    if (deleted) {
-                        res.status(200).json({
-                            message: "user deleted successfully"
-                        });
-                    } else {
-                        res.status(400).json({
-                            message: "user deletion failed"
-                        });
-                    }
-                })
-                .catch(err => next(err));
+                });
+
+                if (!deleted) {
+                    res.status(400).json({
+                        message: "user deletion failed"
+                    });
+                    return;
+                }
+
+                res.status(200).json({
+                    message: "user deleted successfully"
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
     return router;
