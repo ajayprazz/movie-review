@@ -55,29 +55,30 @@ function map_movie_request(movieDetails) {
 module.exports = () => {
     router
         .route("/")
-        .get(authorization, (req, res, next) => {
-            Movie.findAll()
-                .then((movies) => {
-                    res.status(200).json({
-                        message: "movies list retreived",
-                        movies: movies,
-                    });
-                })
-                .catch((err) => next(err));
+        .get(authorization, async (req, res, next) => {
+            try {
+                const movies = await db.Movie.findAll();
+                res.status(200).json({
+                    message: "movies list retreived",
+                    movies: movies,
+                });
+            } catch (err) {
+                next(err);
+            }
         })
-        .post(authorization, upload.single("poster"), (req, res, next) => {
+        .post(authorization, upload.single("poster"), async (req, res, next) => {
             if (req.file) {
                 req.body.poster = req.file.filename;
                 const mappedMovie = map_movie_request(req.body);
-                console.log(mappedMovie);
-                Movie.create(mappedMovie)
-                    .then((movie) => {
-                        res.status(200).json({
-                            movie: movie,
-                            message: "movie inserted successfully",
-                        });
-                    })
-                    .catch((err) => next(err));
+                try {
+                    const movie = await db.Movie.create(mappedMovie);
+                    res.status(200).json({
+                        movie: movie,
+                        message: "movie inserted successfully",
+                    });
+                } catch (err) {
+                    next(err);
+                }
             } else {
                 res.status(400).json({
                     message: "poster required",
@@ -87,81 +88,97 @@ module.exports = () => {
 
     router
         .route("/:id")
-        .get((req, res, next) => {
-            db.Movie.findByPk(req.params.id, {
+        .get(async (req, res, next) => {
+            try {
+                const movie = await db.Movie.findByPk(req.params.id, {
                     include: [{
                         model: db.Review,
                         where: {
                             id: db.Sequelize.col("reviews.movieId"),
                         },
                     }, ],
-                })
-                .then((movie) => {
-                    if (movie) {
-                        res.status(200).json({
-                            movie: movie,
-                        });
-                    } else {
-                        res.status(404).json({
-                            message: "movie not found",
-                        });
-                    }
-                })
-                .catch((err) => next(err));
+                });
+
+                if (!movie) {
+                    res.status(404).json({
+                        message: "movie not found",
+                    });
+                    return;
+                }
+                res.status(200).json({
+                    movie: movie,
+                });
+            } catch (err) {
+                next(err);
+            }
         })
-        .put(authorization, upload.single("poster"), (req, res, next) => {
-            Movie.findByPk(req.params.id)
-                .then((movie) => {
-                    if (req.file) {
-                        req.body.poster = req.file.filename;
-                    }
-                    const mappedMovie = map_movie_request(req.body);
-                    Movie.update(mappedMovie, {
-                            where: {
-                                id: movie.id,
-                            },
-                        })
-                        .then((rowAffected) => {
-                            if (rowAffected > 0) {
-                                Movie.findOne({
-                                        where: {
-                                            id: movie.id,
-                                        },
-                                    })
-                                    .then((movie) => {
-                                        res.status(200).json({
-                                            movie: movie,
-                                        });
-                                    })
-                                    .catch((err) => next(err));
-                            } else {
-                                res.status(400).json({
-                                    message: "update failed",
-                                });
-                            }
-                        })
-                        .catch((err) => next(err));
-                })
-                .catch((err) => next(err));
-        })
-        .delete(authorization, (req, res, next) => {
-            Movie.destroy({
+        .put(authorization, upload.single("poster"), async (req, res, next) => {
+            try {
+                const movie = await db.Movie.findByPk(req.params.id);
+
+                if (!movie) {
+                    res.status(404).json({
+                        message: 'movie not found'
+                    });
+                    return;
+                }
+
+                if (req.file) {
+                    req.body.poster = req.file.filename;
+                }
+
+                const mappedMovie = map_movie_request(req.body);
+
+                const rowAffected = await db.Movie.update(mappedMovie, {
                     where: {
-                        id: req.params.id,
+                        id: movie.id,
                     },
-                })
-                .then((deleted) => {
-                    if (deleted) {
-                        res.status(200).json({
-                            message: "movie deletion successfull",
-                        });
-                    } else {
-                        res.status(400).json({
-                            message: "movie deletion failed",
-                        });
+                });
+
+                if (rowAffected == 0) {
+                    res.status(400).json({
+                        message: "movie update failed"
+                    });
+                    return;
+                }
+
+                const updatedMovie = await db.Movie.findByPk(movie.id);
+
+                res.status(200).json(updatedMovie);
+            } catch (err) {
+                next(err);
+            }
+        })
+        .delete(authorization, async (req, res, next) => {
+            try {
+                const movie = await db.Movie.findByPk(req.params.id);
+
+                if (!movie) {
+                    res.status(404).json({
+                        message: "movie not found"
+                    });
+                    return;
+                }
+
+                const deleted = await db.Movie.destroy({
+                    where: {
+                        id: movie.id
                     }
-                })
-                .catch((err) => next(err));
+                });
+
+                if (!deleted) {
+                    res.status(400).json({
+                        message: "movie deletion failed"
+                    });
+                    return;
+                }
+
+                res.status(200).json({
+                    message: "movie deleted successfully"
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
     router.route("/:id/review").get(async (req, res, next) => {
