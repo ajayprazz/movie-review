@@ -27,6 +27,7 @@ db.User = require("./../models/user")(sequelize, Sequelize);
 // association
 db.Movie.hasMany(db.Review);
 db.Review.belongsTo(db.Movie);
-
+// db.User.hasMany(db.Review);
+// db.Review.belongsTo(db.User);
 
 module.exports = db;
