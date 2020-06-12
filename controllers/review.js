@@ -24,15 +24,16 @@ function map_review_request(reviewDetail) {
 
 module.exports = () => {
     router.route("/")
-        .post((req, res, next) => {
+        .post(async (req, res, next) => {
             const mappedReview = map_review_request(req.body);
-            db.Review.create(mappedReview)
-                .then(review => {
-                    res.status(200).json({
-                        review: review
-                    });
-                })
-                .catch(err => next(err));
+            try {
+                const review = await db.Review.create(mappedReview);
+                res.status(200).json({
+                    review: review
+                });
+            } catch (err) {
+                next(err);
+            }
         });
 
     router.route("/:id")
