@@ -3,6 +3,8 @@ const router = express.Router();
 
 const multer = require("multer");
 
+const fsp = require("fs").promises;
+
 const db = require("./../config/db");
 
 const authorization = require("./../middlewares/authorization");
@@ -172,6 +174,9 @@ module.exports = () => {
                     });
                     return;
                 }
+
+                const posterPath = __dirname + "./../uploads/images/" + movie.poster;
+                await fsp.unlink(posterPath);
 
                 res.status(200).json({
                     message: "movie deleted successfully"
