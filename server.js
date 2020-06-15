@@ -21,6 +21,7 @@ app.use(
 const authRoute = require("./controllers/auth")();
 const movieRoute = require("./controllers/movie")();
 const reviewRoute = require("./controllers/review")();
+const genreRoute = require("./controllers/genre")();
 
 //middlewares
 const authenticate = require("./middlewares/authenticate");
@@ -28,6 +29,7 @@ const authenticate = require("./middlewares/authenticate");
 app.use("/auth", authRoute);
 app.use("/movie", authenticate, movieRoute);
 app.use("/review", authenticate, reviewRoute);
+app.use("/genre", authenticate, genreRoute);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 400).json({

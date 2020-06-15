@@ -72,10 +72,27 @@ module.exports = () => {
             if (req.file) {
                 req.body.poster = req.file.filename;
                 const mappedMovie = map_movie_request(req.body);
+                let genres = [];
+
                 try {
                     const movie = await db.Movie.create(mappedMovie);
+
+                    if (req.body.genre) {
+                        const genres = req.body.genre;
+
+                        const movie_genres = genres.map((genre) => {
+                            return {
+                                movieId: movie.id,
+                                genreId: parseInt(genre),
+                            };
+                        });
+
+                        genreRowAffected = await db.MovieGenre.bulkCreate(movie_genres);
+                    }
+
                     res.status(200).json({
                         movie: movie,
+                        genres: genres,
                         message: "movie inserted successfully",
                     });
                 } catch (err) {
@@ -120,7 +137,7 @@ module.exports = () => {
 
                 if (!movie) {
                     res.status(404).json({
-                        message: 'movie not found'
+                        message: "movie not found",
                     });
                     return;
                 }
@@ -131,15 +148,32 @@ module.exports = () => {
 
                 const mappedMovie = map_movie_request(req.body);
 
-                const rowAffected = await db.Movie.update(mappedMovie, {
+                const movieRowAffected = await db.Movie.update(mappedMovie, {
                     where: {
                         id: movie.id,
                     },
                 });
 
-                if (rowAffected == 0) {
+                let genreRowAffected = false;
+
+                if (req.body.genre) {
+                    const genres = req.body.genre;
+
+                    const movie_genres = genres.map((genre) => {
+                        return {
+                            movieId: movie.id,
+                            genreId: parseInt(genre),
+                        };
+                    });
+
+                    genreRowAffected = await db.MovieGenre.bulkCreate(movie_genres, {
+                        updateOnDuplicate: ["movieId", "genreId"],
+                    });
+                }
+
+                if (movieRowAffected == 0 && !genreRowAffected) {
                     res.status(400).json({
-                        message: "movie update failed"
+                        message: "movie update failed",
                     });
                     return;
                 }
@@ -157,20 +191,20 @@ module.exports = () => {
 
                 if (!movie) {
                     res.status(404).json({
-                        message: "movie not found"
+                        message: "movie not found",
                     });
                     return;
                 }
 
                 const deleted = await db.Movie.destroy({
                     where: {
-                        id: movie.id
-                    }
+                        id: movie.id,
+                    },
                 });
 
                 if (!deleted) {
                     res.status(400).json({
-                        message: "movie deletion failed"
+                        message: "movie deletion failed",
                     });
                     return;
                 }
@@ -179,7 +213,7 @@ module.exports = () => {
                 await fsp.unlink(posterPath);
 
                 res.status(200).json({
-                    message: "movie deleted successfully"
+                    message: "movie deleted successfully",
                 });
             } catch (err) {
                 next(err);
