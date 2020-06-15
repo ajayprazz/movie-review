@@ -32,4 +32,7 @@ db.Review.belongsTo(db.Movie);
 // db.User.hasMany(db.Review);
 // db.Review.belongsTo(db.User);
 
+db.Movie.hasMany(db.MovieGenre);
+db.MovieGenre.belongsTo(db.Movie);
+
 module.exports = db;

@@ -8,6 +8,9 @@ const fsp = require("fs").promises;
 const db = require("./../config/db");
 
 const authorization = require("./../middlewares/authorization");
+const {
+    isArray
+} = require("util");
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -78,21 +81,37 @@ module.exports = () => {
                     const movie = await db.Movie.create(mappedMovie);
 
                     if (req.body.genre) {
-                        const genres = req.body.genre;
+                        let reqGenres = req.body.genre;
 
-                        const movie_genres = genres.map((genre) => {
+                        //if only one genre is provided convert it to array
+                        if (!isArray(reqGenres)) {
+                            reqGenres = reqGenres.split();
+                        }
+
+                        //make object values for each genre to insert in db
+                        const movie_genres = reqGenres.map((genre) => {
                             return {
                                 movieId: movie.id,
                                 genreId: parseInt(genre),
                             };
                         });
 
-                        genreRowAffected = await db.MovieGenre.bulkCreate(movie_genres);
+                        const genres = await db.MovieGenre.bulkCreate(movie_genres);
                     }
 
+                    //query to include genres of movie
+                    const newMovie = await db.Movie.findByPk(movie.id, {
+                        include: [{
+                            model: db.MovieGenre,
+                            attributes: ['genreId'],
+                            where: {
+                                movieId: movie.id
+                            }
+                        }]
+                    });
+
                     res.status(200).json({
-                        movie: movie,
-                        genres: genres,
+                        movie: newMovie,
                         message: "movie inserted successfully",
                     });
                 } catch (err) {
