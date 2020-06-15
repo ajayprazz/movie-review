@@ -76,5 +76,30 @@ module.exports = () => {
             }
         });
 
+    router.route("/:id/movie")
+        .get(async (req, res, next) => {
+            try {
+                const genre = await db.Genre.findByPk(req.params.id);
+
+                if (!genre) {
+                    res.status(404).json({
+                        message: "genre not found"
+                    });
+                    return;
+                }
+
+                const genreMovies = await db.MovieGenre.findAll({
+                    attributes: ['movieId'],
+                    where: {
+                        genreId: genre.id
+                    }
+                });
+
+                res.status(200).json(genreMovies);
+            } catch (err) {
+                next(err);
+            }
+        })
+
     return router;
 }
