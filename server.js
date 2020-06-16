@@ -19,6 +19,7 @@ app.use(
 
 //routes
 const authRoute = require("./controllers/auth")();
+const userRoute = require("./controllers/user")();
 const movieRoute = require("./controllers/movie")();
 const reviewRoute = require("./controllers/review")();
 const genreRoute = require("./controllers/genre")();
@@ -27,6 +28,7 @@ const genreRoute = require("./controllers/genre")();
 const authenticate = require("./middlewares/authenticate");
 
 app.use("/auth", authRoute);
+app.use("/user", authenticate, userRoute);
 app.use("/movie", authenticate, movieRoute);
 app.use("/review", authenticate, reviewRoute);
 app.use("/genre", authenticate, genreRoute);
