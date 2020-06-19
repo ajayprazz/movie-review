@@ -34,8 +34,19 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-db.Movie = require("./movie")(sequelize, Sequelize);
-db.Review = require("./review")(sequelize, Sequelize);
-db.User = require("./user")(sequelize, Sequelize);
+db.Movie = require("./../models/movie")(sequelize, Sequelize);
+db.Review = require("./../models/review")(sequelize, Sequelize);
+db.User = require("./../models/user")(sequelize, Sequelize);
+db.Genre = require("./../models/genre")(sequelize, Sequelize);
+db.MovieGenre = require("./../models/movie_genre")(sequelize, Sequelize);
+
+// association
+db.Movie.hasMany(db.Review);
+db.Review.belongsTo(db.Movie);
+// db.User.hasMany(db.Review);
+// db.Review.belongsTo(db.User);
+
+db.Movie.hasMany(db.MovieGenre);
+db.MovieGenre.belongsTo(db.Movie);
 
 module.exports = db;

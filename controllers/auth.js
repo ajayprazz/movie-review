@@ -1,9 +1,6 @@
-const express = require("express");
-const router = express.Router();
-
 const config = require("./../config");
 
-const db = require("./../config/db");
+const db = require("./../models/");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -34,58 +31,54 @@ function map_user_request(userDetail) {
     return user;
 }
 
-module.exports = function () {
+module.exports = {
 
-    router.route("/register")
-        .post(async (req, res, next) => {
-            const mappedUser = map_user_request(req.body);
-            try {
-                const user = await db.User.create(mappedUser);
-                res.status(400).json({
-                    user: user
-                });
-            } catch (err) {
-                next(err);
-            }
-        });
+    register: async (req, res, next) => {
+        const mappedUser = map_user_request(req.body);
+        try {
+            const user = await db.User.create(mappedUser);
+            res.status(400).json({
+                user: user
+            });
+        } catch (err) {
+            next(err);
+        }
+    },
 
-    router.route("/login")
-        .post(async (req, res, next) => {
-            try {
-                const user = await db.User.findOne({
-                    where: {
-                        username: req.body.username
-                    }
-                });
-
-                if (!user) {
-                    res.status(401).json({
-                        message: "username or password wrong"
-                    });
-                    return;
+    login: async (req, res, next) => {
+        try {
+            const user = await db.User.findOne({
+                where: {
+                    username: req.body.username
                 }
+            });
 
-                const matched = bcrypt.compareSync(req.body.password, user.password);
-
-                if (!matched) {
-                    res.status(401).json({
-                        message: "username or password wrong"
-                    });
-                }
-                const token = jwt.sign({
-                    id: user.id,
-                    username: user.username
-                }, config.app.jwtSecret);
-
-                res.status(200).json({
-                    message: "login successfull",
-                    user: user,
-                    token: token
+            if (!user) {
+                res.status(401).json({
+                    message: "username or password wrong"
                 });
-            } catch (err) {
-                next(err);
+                return;
             }
-        });
 
-    return router;
+            const matched = bcrypt.compareSync(req.body.password, user.password);
+
+            if (!matched) {
+                res.status(401).json({
+                    message: "username or password wrong"
+                });
+            }
+            const token = jwt.sign({
+                id: user.id,
+                username: user.username
+            }, config.app.jwtSecret);
+
+            res.status(200).json({
+                message: "login successfull",
+                user: user,
+                token: token
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

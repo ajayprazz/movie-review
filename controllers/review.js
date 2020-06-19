@@ -1,7 +1,4 @@
-const express = require("express");
-const router = express.Router();
-
-const db = require("./../config/db");
+const db = require("./../models/");
 
 function map_review_request(reviewDetail) {
     let review = {};
@@ -22,97 +19,95 @@ function map_review_request(reviewDetail) {
     return review;
 }
 
-module.exports = () => {
-    router.route("/")
-        .post(async (req, res, next) => {
+module.exports = {
+    add: async (req, res, next) => {
+        const mappedReview = map_review_request(req.body);
+        try {
+            const review = await db.Review.create(mappedReview);
+            res.status(200).json({
+                review: review
+            });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    getById: async (req, res, next) => {
+        try {
+            const review = await db.Review.findByPk(req.params.id);
+            if (!review) {
+                res.status(404).json({
+                    message: "review not found"
+                });
+                return;
+            }
+            res.status(200).json({
+                review: review
+            });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    update: async (req, res, next) => {
+        try {
+            const review = await db.Review.findByPk(req.params.id);
+            if (!review) {
+                res.status(404).json({
+                    message: "review not found"
+                });
+                return
+            }
             const mappedReview = map_review_request(req.body);
-            try {
-                const review = await db.Review.create(mappedReview);
-                res.status(200).json({
-                    review: review
+            const affectedRow = await db.Review.update(mappedReview, {
+                where: {
+                    id: review.id
+                }
+            });
+            if (affectedRow == 0) {
+                res.status(400).json({
+                    message: "review update failed"
                 });
-            } catch (err) {
-                next(err);
+                return;
             }
-        });
+            const updatedReview = await db.Review.findByPk(review.id);
+            res.status(200).json({
+                review: updatedReview,
+                message: "review updated successfully"
+            });
+        } catch (err) {
+            next(err);
+        };
+    },
 
-    router.route("/:id")
-        .get(async (req, res, next) => {
-            try {
-                const review = await db.Review.findByPk(req.params.id);
-                if (!review) {
-                    res.status(404).json({
-                        message: "review not found"
-                    });
-                    return;
-                }
-                res.status(200).json({
-                    review: review
+    remove: async (req, res, next) => {
+        try {
+            const review = await db.Review.findByPk(req.params.id);
+
+            if (!review) {
+                res.status(404).json({
+                    message: "review not found"
                 });
-            } catch (err) {
-                next(err);
+                return;
             }
-        })
-        .put(async (req, res, next) => {
-            try {
-                const review = await db.Review.findByPk(req.params.id);
-                if (!review) {
-                    res.status(404).json({
-                        message: "review not found"
-                    });
-                    return
-                }
-                const mappedReview = map_review_request(req.body);
-                const affectedRow = await db.Review.update(mappedReview, {
-                    where: {
-                        id: review.id
-                    }
-                });
-                if (affectedRow == 0) {
-                    res.status(400).json({
-                        message: "review update failed"
-                    });
-                    return;
-                }
-                const updatedReview = await db.Review.findByPk(review.id);
-                res.status(200).json({
-                    review: updatedReview,
-                    message: "review updated successfully"
-                });
-            } catch (err) {
-                next(err);
-            };
-        })
-        .delete(async (req, res, next) => {
-            try {
-                const review = await db.Review.findByPk(req.params.id);
 
-                if (!review) {
-                    res.status(404).json({
-                        message: "review not found"
-                    });
-                    return;
+            const deleted = await db.Review.destroy({
+                where: {
+                    id: review.id
                 }
+            });
 
-                const deleted = await db.Review.destroy({
-                    where: {
-                        id: review.id
-                    }
+            if (!deleted) {
+                res.status(400).json({
+                    message: "review deletion failed"
                 });
-
-                if (!deleted) {
-                    res.status(400).json({
-                        message: "review deletion failed"
-                    });
-                    return
-                }
-                res.status(200).json({
-                    message: "review deletion successfull"
-                });
-            } catch (err) {
-                next(err);
+                return
             }
-        });
-
-    return router;
+            res.status(200).json({
+                message: "review deletion successfull"
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

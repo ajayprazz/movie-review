@@ -2,7 +2,7 @@ const express = require("express");
 const bodyparser = require("body-parser");
 const morgan = require("morgan");
 
-require("./config/db");
+// require("./config/db");
 const config = require("./config/index");
 
 const app = express();
@@ -18,20 +18,17 @@ app.use(
 
 
 //routes
-const authRoute = require("./controllers/auth")();
-const userRoute = require("./controllers/user")();
-const movieRoute = require("./controllers/movie")();
-const reviewRoute = require("./controllers/review")();
-const genreRoute = require("./controllers/genre")();
-
-//middlewares
-const authenticate = require("./middlewares/authenticate");
+const authRoute = require("./routes/auth");
+const userRoute = require("./routes/user");
+const movieRoute = require("./routes/movie");
+const reviewRoute = require("./routes/review");
+const genreRoute = require("./routes/genre");
 
 app.use("/auth", authRoute);
-app.use("/user", authenticate, userRoute);
-app.use("/movie", authenticate, movieRoute);
-app.use("/review", authenticate, reviewRoute);
-app.use("/genre", authenticate, genreRoute);
+app.use("/user", userRoute);
+app.use("/movie", movieRoute);
+app.use("/review", reviewRoute);
+app.use("/genre", genreRoute);
 
 app.use((err, req, res, next) => {
   res.status(err.status || 400).json({
