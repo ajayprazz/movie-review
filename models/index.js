@@ -43,8 +43,9 @@ db.MovieGenre = require("./../models/movie_genre")(sequelize, Sequelize);
 // association
 db.Movie.hasMany(db.Review);
 db.Review.belongsTo(db.Movie);
-// db.User.hasMany(db.Review);
-// db.Review.belongsTo(db.User);
+
+db.User.hasMany(db.Review);
+db.Review.belongsTo(db.User);
 
 db.Movie.hasMany(db.MovieGenre);
 db.MovieGenre.belongsTo(db.Movie);
