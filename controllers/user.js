@@ -58,5 +58,30 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    listReviews: async (req, res, nex) => {
+        try {
+            const user = await db.User.findByPk(req.params.id);
+            if (!user) {
+                res.status(404).json({
+                    message: "user not found"
+                });
+            }
+
+            const userReviews = await db.Review.findAll({
+                where: {
+                    userId: user.id
+                },
+                include: [{
+                    model: db.Movie,
+                    attributes: ['id', 'title']
+                }]
+            });
+
+            res.status(200).json(userReviews);
+        } catch (err) {
+            next(err);
+        }
     }
 }

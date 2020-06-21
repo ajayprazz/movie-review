@@ -10,4 +10,7 @@ router.route("/:id")
     .get(userController.getById)
     .delete(userController.remove);
 
+router.route("/:id/review")
+    .get(userController.listReviews);
+
 module.exports = router;
