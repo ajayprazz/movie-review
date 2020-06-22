@@ -3,8 +3,6 @@ const config = require("./../config");
 const db = require("./../models/");
 
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const saltRound = 10;
 
 function map_user_request(userDetail) {
     let user = {};
@@ -16,7 +14,7 @@ function map_user_request(userDetail) {
         user.username = userDetail.username;
     }
     if (userDetail.password) {
-        user.password = bcrypt.hashSync(userDetail.password, saltRound);
+        user.password = userDetail.password;
     }
     if (userDetail.firstname) {
         user.firstname = userDetail.firstname;
@@ -60,23 +58,22 @@ module.exports = {
                 return;
             }
 
-            const matched = bcrypt.compareSync(req.body.password, user.password);
+            if (user.comparePassword(req.body.password)) {
+                const token = jwt.sign({
+                    id: user.id,
+                    username: user.username
+                }, config.app.jwtSecret);
 
-            if (!matched) {
+                res.status(200).json({
+                    message: "login successfull",
+                    user: user,
+                    token: token
+                });
+            } else {
                 res.status(401).json({
                     message: "username or password wrong"
                 });
             }
-            const token = jwt.sign({
-                id: user.id,
-                username: user.username
-            }, config.app.jwtSecret);
-
-            res.status(200).json({
-                message: "login successfull",
-                user: user,
-                token: token
-            });
         } catch (err) {
             next(err);
         }
