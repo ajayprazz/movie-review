@@ -30,14 +30,14 @@ module.exports = (req, res, next) => {
                     })
                     .catch(err => next(err));
             } else {
-                res.status(400).json({
+                res.status(401).json({
                     message: "token verification failed"
                 });
             }
         });
 
     } else {
-        res.status(400).json({
+        res.status(401).json({
             message: "token not provided"
         });
     }
