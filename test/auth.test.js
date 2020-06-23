@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test';
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require("../server");
@@ -6,14 +8,18 @@ const should = chai.should();
 
 chai.use(chaiHttp)
 
-const User = require('./../models').User;
+const db = require("./../models/");
 
 describe('Auth Test', () => {
 
     let token = "";
 
     before(async () => {
-        await User.create({
+        await db.User.sync({
+            force: true
+        })
+
+        await db.User.create({
             email: 'test@gmail.com',
             username: 'test',
             password: 'test',
@@ -21,7 +27,7 @@ describe('Auth Test', () => {
     });
 
     after(async () => {
-        await User.destroy({
+        await db.User.destroy({
             where: {
                 email: "test@gmail.com"
             }
