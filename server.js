@@ -20,10 +20,11 @@ app.use(
 const appRoute = require("./routes/");
 app.use("/", appRoute);
 
+//error handling middleware
 app.use((err, req, res, next) => {
-  res.status(err.status || 400).json({
-    status: err.status || 400,
-    message: err
+  res.status(err.status || 500).json({
+    status: err.status || 500,
+    message: err,
   });
 });
 
@@ -31,3 +32,5 @@ app.listen(config.app.port, (err, done) => {
   if (err) throw err;
   console.log("server listening at 4040");
 });
+
+module.exports = app;
