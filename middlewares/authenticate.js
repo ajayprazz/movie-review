@@ -4,8 +4,17 @@ const db = require("./../models/");
 
 module.exports = (req, res, next) => {
     let token;
+    if (req.headers['x-access-token']) {
+        token = req.headers['x-access-token'];
+    }
+    if (req.headers['authorization']) {
+        token = req.headers['authorization'];
+    }
     if (req.headers.token) {
         token = req.headers.token;
+    }
+    if (req.query.token) {
+        token = req.query.token;
     }
 
     if (token) {
