@@ -13,16 +13,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             isEmail: true,
             unique: true,
-            required: true
+            allowNull: false
         },
         username: {
             type: Sequelize.STRING,
             unique: true,
-            required: true
+            allowNull: true
         },
         password: {
             type: Sequelize.CHAR,
-            required: true
+            allowNull: false
         },
         firstname: {
             type: Sequelize.STRING

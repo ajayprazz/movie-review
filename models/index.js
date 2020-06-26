@@ -34,9 +34,9 @@ if (config.use_env_variable) {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+db.User = require("./../models/user")(sequelize, Sequelize);
 db.Movie = require("./../models/movie")(sequelize, Sequelize);
 db.Review = require("./../models/review")(sequelize, Sequelize);
-db.User = require("./../models/user")(sequelize, Sequelize);
 db.Genre = require("./../models/genre")(sequelize, Sequelize);
 db.MovieGenre = require("./../models/movie_genre")(sequelize, Sequelize);
 

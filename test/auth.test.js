@@ -15,7 +15,7 @@ describe('Auth Test', () => {
     let token = "";
 
     before(async () => {
-        await db.User.sync({
+        await db.sequelize.sync({
             force: true
         })
 
@@ -23,16 +23,9 @@ describe('Auth Test', () => {
             email: 'test@gmail.com',
             username: 'test',
             password: 'test',
+            role: 1
         });
     });
-
-    after(async () => {
-        await db.User.destroy({
-            where: {
-                email: "test@gmail.com"
-            }
-        });
-    })
 
     describe('POST /auth login', () => {
         it('It should login the user', (done) => {

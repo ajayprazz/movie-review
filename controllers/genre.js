@@ -1,15 +1,13 @@
-const express = require('express');
-const router = express.Router();
-
 const db = require("./../models/");
-const authorization = require('../middlewares/authorization');
 
 module.exports = {
 
     list: async (req, res, next) => {
         try {
             const genres = await db.Genre.findAll();
-            res.status(200).json(genres);
+            res.status(200).json({
+                genres: genres
+            });
         } catch (err) {
             next(err);
         }
@@ -21,7 +19,9 @@ module.exports = {
                 name: req.body.name
             });
 
-            res.status(200).json(genre);
+            res.status(200).json({
+                genre: genre
+            });
         } catch (err) {
             next(err);
         }
@@ -38,7 +38,9 @@ module.exports = {
                 return;
             }
 
-            res.status(200).json(genre);
+            res.status(200).json({
+                genre: genre
+            });
         } catch (err) {
             next(err);
         }
@@ -54,7 +56,6 @@ module.exports = {
                 });
                 return;
             }
-
             const deleted = await db.Genre.destroy({
                 where: {
                     id: genre.id
@@ -69,7 +70,7 @@ module.exports = {
             }
 
             res.status(200).json({
-                message: "movie deleted successfully"
+                message: "genre deleted successfully"
             });
         } catch (err) {
             next(err);
@@ -94,7 +95,9 @@ module.exports = {
                 }
             });
 
-            res.status(200).json(genreMovies);
+            res.status(200).json({
+                movies: genreMovies
+            });
         } catch (err) {
             next(err);
         }

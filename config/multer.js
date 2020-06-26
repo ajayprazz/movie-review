@@ -1,8 +1,15 @@
 const multer = require("multer");
+let folderPath = "";
+if (process.env.NODE_ENV == 'test') {
+    folderPath = "./uploads/test";
+} else {
+    folderPath = "./uploads/images";
+}
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "./uploads/images");
+        cb(null, folderPath);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + "-" + file.originalname);
@@ -16,7 +23,6 @@ const upload = multer({
         if (image != "image") {
             return cb("Use valid image format");
         }
-
         cb(null, true);
     },
 });

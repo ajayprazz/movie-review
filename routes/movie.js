@@ -19,4 +19,7 @@ router.route("/:id")
 router.route("/:id/review")
     .get(movieController.listReviews);
 
+router.route(":/id/genre")
+    .get(movieController.listGenres);
+
 module.exports = router;

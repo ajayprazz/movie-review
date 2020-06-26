@@ -28,8 +28,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         wikiLink: {
             type: Sequelize.STRING,
-            isUrl: true,
-            allowNull: false
+            isUrl: true
         },
         createdAt: Sequelize.DATE,
         updatedAt: Sequelize.DATE

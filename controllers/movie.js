@@ -1,6 +1,9 @@
 const fsp = require("fs").promises;
 
 const db = require("./../models/");
+const {
+    isArray
+} = require("util");
 
 function map_movie_request(movieDetails) {
     let movie = {};
@@ -44,7 +47,6 @@ module.exports = {
             req.body.poster = req.file.filename;
             const mappedMovie = map_movie_request(req.body);
             let genres = [];
-
             try {
                 const movie = await db.Movie.create(mappedMovie);
 
@@ -67,19 +69,8 @@ module.exports = {
                     const genres = await db.MovieGenre.bulkCreate(movie_genres);
                 }
 
-                //query to include genres of movie
-                const newMovie = await db.Movie.findByPk(movie.id, {
-                    include: [{
-                        model: db.MovieGenre,
-                        attributes: ['genreId'],
-                        where: {
-                            movieId: movie.id
-                        }
-                    }]
-                });
-
                 res.status(200).json({
-                    movie: newMovie,
+                    movie: movie,
                     message: "movie inserted successfully",
                 });
             } catch (err) {
@@ -87,21 +78,14 @@ module.exports = {
             }
         } else {
             res.status(400).json({
-                message: "poster required",
+                message: "poster required"
             });
         }
     },
 
     getById: async (req, res, next) => {
         try {
-            const movie = await db.Movie.findByPk(req.params.id, {
-                include: [{
-                    model: db.Review,
-                    where: {
-                        id: db.Sequelize.col("reviews.movieId"),
-                    },
-                }, ],
-            });
+            const movie = await db.Movie.findByPk(req.params.id);
 
             if (!movie) {
                 res.status(404).json({
@@ -166,7 +150,9 @@ module.exports = {
 
             const updatedMovie = await db.Movie.findByPk(movie.id);
 
-            res.status(200).json(updatedMovie);
+            res.status(200).json({
+                movie: updatedMovie
+            });
         } catch (err) {
             next(err);
         }
@@ -220,9 +206,28 @@ module.exports = {
                 return;
             }
 
-            res.status(200).json(movieReviews);
+            res.status(200).json({
+                reviews: movieReviews
+            });
         } catch (err) {
             next(err);
+        }
+    },
+
+    listGenres: async (req, res, next) => {
+        try {
+            const movieGenres = await db.MovieGenre.findAll({
+                where: {
+                    movieId: req.params.id
+                },
+                attributes: ['genreId']
+            });
+
+            res.status(200).json({
+                genres: movieGenres
+            });
+        } catch (err) {
+            throw err;
         }
     }
 };

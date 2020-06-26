@@ -1,31 +1,29 @@
+process.env.NODE_ENV = 'test';
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require("../server");
 
 const should = chai.should();
-const expect = chai.expect;
 
 chai.use(chaiHttp)
 
-const User = require('./../models').User;
+const db = require('./../models');
 
 describe("User Test", () => {
 
-    let token = "";
+    let token, user = "";
 
     before(async () => {
-        await User.create({
+        await db.sequelize.sync({
+            force: true
+        });
+
+        await db.User.create({
             email: 'test@gmail.com',
             username: 'test',
             password: 'test',
-        });
-    });
-
-    after(async () => {
-        await User.destroy({
-            where: {
-                email: 'test@gmail.com'
-            }
+            role: 1
         });
     });
 
@@ -41,6 +39,7 @@ describe("User Test", () => {
                     res.should.have.status(200);
                     res.body.should.have.property('token');
                     token = res.body.token;
+                    user = res.body.user;
                     done();
                 })
                 .catch(err => {
@@ -49,19 +48,51 @@ describe("User Test", () => {
         });
     });
 
-    describe('/GET user', () => {
-        it('it should Get all users', (done) => {
+    describe('GET /user', () => {
+        it('it should return all users list', done => {
             chai.request(app)
                 .get('/user')
-                .set('Authorization', token)
-                .then((res) => {
+                .set('authorization', token)
+                .then(res => {
                     res.should.have.status(200);
-                    res.body.should.be.a('object');
+                    res.body.should.have.property('users');
                     done();
                 })
                 .catch(err => {
                     throw err;
+                });
+        });
+    });
+
+
+    describe('GET /user/:id', () => {
+        it('it should return user of given id', done => {
+            chai.request(app)
+                .get(`/user/${user.id}`)
+                .set('authorization', token)
+                .then(res => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('user');
+                    done();
                 })
+                .catch(err => {
+                    throw err;
+                });
+        });
+    });
+
+    describe('DELETE /user/:id', () => {
+        it('it should delete user of given id', done => {
+            chai.request(app)
+                .delete(`/user/${user.id}`)
+                .set('authorization', token)
+                .then(res => {
+                    res.should.have.status(200);
+                    done();
+                })
+                .catch(err => {
+                    throw err;
+                });
         });
     });
 });

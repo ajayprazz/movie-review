@@ -8,22 +8,25 @@ module.exports = (sequelize, Sequelize) => {
         },
         userId: {
             type: Sequelize.INTEGER,
+            allowNull: false,
             references: {
-                model: "user",
+                model: "users",
                 key: "id",
                 onDelete: "cascade"
             }
         },
         movieId: {
             type: Sequelize.INTEGER,
+            allowNull: false,
             references: {
-                model: "movie",
+                model: "movies",
                 key: "id",
                 onDelete: "cascade"
             }
         },
         rating: {
-            type: Sequelize.TINYINT
+            type: Sequelize.TINYINT,
+            allowNull: false
         },
         review: {
             type: Sequelize.TEXT
